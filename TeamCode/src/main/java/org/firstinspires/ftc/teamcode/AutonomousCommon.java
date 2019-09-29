@@ -4,14 +4,17 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 @Autonomous(name="AutonomousCommon", group="FS")
-@Disabled
+// @Disabled
 public class AutonomousCommon extends RobotHardware {
 
     @Override
     public void runOpMode() {
+        initialize();
+
         /** Wait for the game to begin */
         telemetry.addData(">", "Press Play to start automous");
         telemetry.update();
+
         waitForStart();
 
         initializeWhenStart();

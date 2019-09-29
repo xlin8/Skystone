@@ -69,8 +69,7 @@ public class DetectSkystone {
      * and paste it in to your code on the next line, between the double quotes.
      */
     private static final String VUFORIA_KEY =
-            "AS0FKrL/////AAABmTcBCNs1gE8uh4tntGA7HSgXRT5npDQpV2pw5tlqbZCI6WJQRf0bKf458A218bGkQJCWkJzvJy6UtNnhziraRVDDZSnTSZGSD7s3WN9jNYqBiSoO3CVE6FU2dX1yuJNa1zfiEhcGT8ChTd+kucE/q3sXsy/nw1KqlW/7uEaEeRwaCPseqsbNrc1HZ1bi18PzwQpCaypDruqqVEyZ3dvTqDmjPg7WFBe2kStPR/qTtcLSXdE804RxxkgTGUtDMIG7TTbAdirInGVZw2p2APZKAQdYofYW2E0Ss5hZCeL55zflSuQK0QcW1sAyvaTUMd/fDse4FgqxhnfK0ip0Kc+ZqZ6XJpof/Nowwxv3IgDWZJzO";
-
+            "AbCbPUz/////AAABmRlaEryonEVfsxxT+iHrRnIO+B0SFb6vzFX7lYpj3WD2pSxJG1pAEJeUJR3XWKQqKUbO8KUhq/4mnx2uvCcUM1Rg5/3f+qR0VytJNlyYBXAL9kvbpHVbHI/qjQziYKQ0/1SlKj4KX9nHDmPImH8Vd9vfXauFXJ8bnVE175BVln5MS6bYiK4vvxecGyrIvXpjojrYoHdynFVWcIiAtyy5pSjDbavzC/R12FO2uonKGuWNYfRDPUUnABkpSnObZGu6dxl+n1TznC/jBdWFACKJHaaxfqEiXdUkgXy3LUvUqSjhuYrYQAoL6hVlzkSEJs4AQkvybTeUCMRhCBO6cfheYDQuJnFFft8REdT6d5fyx4a1";
     private WebcamName webcamName_ = null;
     private int tfodMonitorViewId_ = 0;
     private Telemetry telemetry_ = null;
@@ -160,32 +159,25 @@ public class DetectSkystone {
     }
 
     public boolean detectSkystone() {
-        if (tfod_ == null) {
-            telemetry_.addData("Fail to detect skystone", "No Tfod");
-            return false;
-        }
+        if (tfod_ == null) return false;
 
         // getUpdatedRecognitions() will return null if no new information is available since
         // the last time that call was made.
         List<Recognition> updatedRecognitions = tfod_.getUpdatedRecognitions();
-        if (updatedRecognitions == null) {
-            telemetry_.addData("Fail to detect skystone", "No skystone is found");
-            return false;
+        if (updatedRecognitions != null) {
+            telemetry_.addData("# Object Detected", updatedRecognitions.size());
+
+            // step through the list of recognitions and display boundary info.
+            int i = 0;
+            for (Recognition recognition : updatedRecognitions) {
+                telemetry_.addData(String.format("label (%d)", i), recognition.getLabel());
+                telemetry_.addData(String.format("  left,top (%d)", i), "%.03f , %.03f",
+                            recognition.getLeft(), recognition.getTop());
+                telemetry_.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
+                            recognition.getRight(), recognition.getBottom());
+            }
+            telemetry_.update();
         }
-
-        telemetry_.addData("Detect sky stone", updatedRecognitions.size() + " are found");
-
-        // step through the list of recognitions and display boundary info.
-        int i = 0;
-        for (Recognition recognition : updatedRecognitions) {
-            telemetry_.addData(String.format("label (%d)", i), recognition.getLabel());
-            telemetry_.addData(String.format("  left,top (%d)", i), "%.03f , %.03f",
-                    recognition.getLeft(), recognition.getTop());
-            telemetry_.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
-                    recognition.getRight(), recognition.getBottom());
-        }
-
-        telemetry_.update();
 
         return true;
     }

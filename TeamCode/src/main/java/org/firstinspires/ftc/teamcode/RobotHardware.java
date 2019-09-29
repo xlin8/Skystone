@@ -24,7 +24,7 @@ public class RobotHardware extends LinearOpMode {
 
     // Code to run when op mode is initialized
     public void initialize() {
-        createDriveTrain();
+        // createDriveTrain();
 
         createDetectSkystone();
     }
@@ -49,7 +49,8 @@ public class RobotHardware extends LinearOpMode {
     private void createDetectSkystone(){
         int tfod_monitor_view_id = hardwareMap.appContext.getResources().getIdentifier(
                 "tfodMonitorViewId", "id", hardwareMap.appContext.getPackageName());
-        WebcamName webcam_name = hardwareMap.get(WebcamName.class, "webcam");
+        // WebcamName webcam_name = hardwareMap.get(WebcamName.class, "webcam");
+        WebcamName webcam_name = null;
         detectSkystone_ = new DetectSkystone(webcam_name,
                                              tfod_monitor_view_id,
                                              telemetry);
