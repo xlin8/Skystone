@@ -139,7 +139,9 @@ public class DetectSkystone {
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
 
         parameters.vuforiaLicenseKey = VUFORIA_KEY;
-        parameters.cameraName = webcamName_;
+
+        if (webcamName_ != null) parameters.cameraName = webcamName_;
+        else parameters.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
 
         //  Instantiate the Vuforia engine
         vuforia_ = ClassFactory.getInstance().createVuforia(parameters);
