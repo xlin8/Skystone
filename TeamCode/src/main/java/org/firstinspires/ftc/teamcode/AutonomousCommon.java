@@ -12,7 +12,7 @@ public class AutonomousCommon extends RobotHardware {
         initialize();
 
         /** Wait for the game to begin */
-        telemetry.addData(">", "Press Play to start automous");
+        telemetry.addData(">", "Press Play to start autonomous");
         telemetry.update();
 
         waitForStart();
@@ -28,9 +28,8 @@ public class AutonomousCommon extends RobotHardware {
         cleanUpAtEndOfRun();
     }
 
-    @Override
     public void initialize() {
-        super.initialize();
+        super.initializeAutonomous();
 
         // Activate Tfod for detecting skystone
         getDetectSkystone().setupTfod();

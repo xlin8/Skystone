@@ -50,7 +50,8 @@ public class RevImu {
 
     // Return current robot heading based on gyro/IMU reading
     double getHeading() {
-        imuAngles_  = imu_.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);  // acquiring angles are expensive, keep it minimal
+        // acquiring angles are expensive, keep it minimal
+        imuAngles_  = imu_.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
         imuHeading_ = AngleUnit.DEGREES.normalize(imuAngles_.firstAngle);
 
         return imuHeading_;

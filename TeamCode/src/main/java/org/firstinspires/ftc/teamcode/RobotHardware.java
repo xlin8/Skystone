@@ -22,11 +22,14 @@ public class RobotHardware extends LinearOpMode {
         // Do nothing
     }
 
-    // Code to run when op mode is initialized
-    public void initialize() {
+    public void initializeAutonomous() {
         // createDriveTrain();
 
         createDetectSkystone();
+    }
+
+    public void initializeTeleOp() {
+        // createDriveTrain();
     }
 
     DriveTrain getDriveTrain() {
