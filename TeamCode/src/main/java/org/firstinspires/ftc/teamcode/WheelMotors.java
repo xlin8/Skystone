@@ -8,7 +8,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 // Motors for wheels
 public class WheelMotors {
-    enum DriveMode {
+    public enum DriveMode {
         FORWARD,
         BACKWARD,
         TURN_LEFT,
@@ -27,6 +27,10 @@ public class WheelMotors {
     static final double MAX_HEADING_CORRECTION_GAIN = 0.012;   // power percentage to be adjusted for each degree of heading error; 1-degree error => 5% power diff
     static final double MAX_HEADING_CORRECTION = 0.95;         // max heading correction; 0, not used
 
+    static final double ENCODER_DISTANCE_SCALE = (2000.0 / 1.25);
+    static final double ENCODER_SHIFT_DISTANCE_SCALE = (2000.0 / 1.25);
+    static final double ENCODER_DEGREE_SCALE = (2000.0 / 225.0);
+
     private Telemetry telemetry_;
 
     DcMotor motorRF_ = null;
@@ -38,8 +42,8 @@ public class WheelMotors {
 
     // use for detecting encoder stuck
     static final double  AUTO_ENC_STUCK_TIME_OUT = 2.00;
-    double prevReadEncCntMotorLF_ = 0.0;
-    double prevReadEncCntMotorRF_ = 0.0;
+    int prevReadEncCntMotorLF_ = 0;
+    int prevReadEncCntMotorRF_ = 0;
     double prevEncCntChangeStartTime_ = 0;
 
     public WheelMotors(DcMotor motorRF,
@@ -82,7 +86,7 @@ public class WheelMotors {
         return motorLB_;
     }
 
-    public void driveWheels(DriveMode drive_mode,
+    public void driveByMode(DriveMode drive_mode,
                             RevImu imu,              // If imu != null, allow automaically correct heading error
                             double target_heading,
                             boolean show_set_power_info) {
@@ -234,25 +238,52 @@ public class WheelMotors {
 
     // Use encoders to drive motors
     public void useEncoders() {
-        if (motorRF_ != null) motorRF_.setMode (DcMotor.RunMode.RUN_USING_ENCODER);
-        if (motorRB_ != null) motorRB_.setMode (DcMotor.RunMode.RUN_USING_ENCODER);
-        if (motorLF_ != null) motorLF_.setMode (DcMotor.RunMode.RUN_USING_ENCODER);
-        if (motorLB_ != null) motorLB_.setMode (DcMotor.RunMode.RUN_USING_ENCODER);
+        if (motorRF_ != null) motorRF_.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        if (motorRB_ != null) motorRB_.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        if (motorLF_ != null) motorLF_.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        if (motorLB_ != null) motorLB_.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     // Reset both drive wheel encoders.
-    public void resetEncoders() {
-        if (motorRF_ != null) motorRF_.setMode (DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        if (motorRB_ != null) motorRB_.setMode (DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        if (motorLF_ != null) motorLF_.setMode (DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        if (motorLB_ != null) motorLB_.setMode (DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    public void resetEncoders(double time) {
+        if (motorRF_ != null) motorRF_.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        if (motorRB_ != null) motorRB_.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        if (motorLF_ != null) motorLF_.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        if (motorLB_ != null) motorLB_.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        prevReadEncCntMotorLF_ = 0;
+        prevReadEncCntMotorRF_ = 0;
+        prevEncCntChangeStartTime_ = time;
+    }
+
+    boolean allEncodersAreReset() {
+        return (getMotorRFEncoderPosition() == 0 &&
+                getMotorRBEncoderPosition() == 0 &&
+                getMotorLFEncoderPosition() == 0 &&
+                getMotorLBEncoderPosition() == 0);
+    }
+
+    int getMotorRFEncoderPosition() {
+        return (motorRF_ != null) ? motorRF_.getCurrentPosition() : 0;
+    }
+
+    int getMotorRBEncoderPosition() {
+        return (motorRB_ != null) ? motorRB_.getCurrentPosition() : 0;
+    }
+
+    int getMotorLFEncoderPosition() {
+        return (motorLF_ != null) ? motorLF_.getCurrentPosition() : 0;
+    }
+
+    int getMotorLBEncoderPosition() {
+        return (motorLB_ != null) ? motorLB_.getCurrentPosition() : 0;
     }
 
     public boolean isEncoderStuck(double time) {
         if (motorRF_ == null || motorLF_ == null) return false;
 
-        double curr_read_enc_motor_lf = motorLF_.getCurrentPosition();
-        double curr_read_enc_motor_rf = motorRF_.getCurrentPosition();
+        int curr_read_enc_motor_lf = motorLF_.getCurrentPosition();
+        int curr_read_enc_motor_rf = motorRF_.getCurrentPosition();
         if (prevReadEncCntMotorLF_ != curr_read_enc_motor_lf ||
                 prevReadEncCntMotorRF_ != curr_read_enc_motor_rf) {
             prevReadEncCntMotorLF_ = curr_read_enc_motor_lf;
@@ -268,4 +299,35 @@ public class WheelMotors {
         return false;
     }
 
+    int convertDistanceToEncoderCount(double distance_in_meter) {
+        return (int)(distance_in_meter *  ENCODER_DISTANCE_SCALE);
+    }
+
+    int convertShiftDistanceToEncoderCount(double distance_in_meter) {
+        return (int)(distance_in_meter *  ENCODER_SHIFT_DISTANCE_SCALE);
+    }
+
+    int convertDegreeToEncoderCount(double degree) {
+        return (int)(degree *  ENCODER_DEGREE_SCALE);
+    }
+
+    boolean reachToTargetEncoderCount(int target_encoder_cnt) {
+        if (motorLF_ != null) {
+            if (Math.abs(motorLF_.getCurrentPosition()) >= target_encoder_cnt) return true;
+        }
+
+        if (motorLB_ != null) {
+            if (Math.abs(motorLB_.getCurrentPosition()) >= target_encoder_cnt) return true;
+        }
+
+        if (motorRF_ != null) {
+            if (Math.abs(motorRF_.getCurrentPosition()) >= target_encoder_cnt) return true;
+        }
+
+        if (motorRB_ != null) {
+            if (Math.abs(motorRB_.getCurrentPosition()) >= target_encoder_cnt) return true;
+        }
+
+        return false;
+    }
 }
