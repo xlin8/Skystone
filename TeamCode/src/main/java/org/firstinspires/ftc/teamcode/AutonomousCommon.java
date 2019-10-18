@@ -18,10 +18,10 @@ public class AutonomousCommon extends RobotHardware {
     static final int OP_DRIVE_TRAIN_SHIFT_LEFT = 8;
     static final int OP_DRIVE_TRAIN_SHIFT_RIGHT = 9;
 
-    double [] opList_ = null;       // List all <opcode, oprand> pair to be done during autonomous
-    int numOpcodesInList_ = 0;
-    int currOpIdInList_ = -1;       // Index of current opcode in opList_
-    double currOpStartTime_ = 0.0;  // Start time to run current opcode
+    AutoOperation [] opList_ = null;        // List all operations to be done during autonomous
+    int numOpsInList_ = 0;                  // Array size of opList_
+    int currOpIdInList_ = -1;               // Index of current opcode in opList_
+    double currOpStartTime_ = 0.0;          // Start time to run current opcode
 
     @Override
     public void runOpMode() {
@@ -45,7 +45,7 @@ public class AutonomousCommon extends RobotHardware {
     }
 
     public void initialize() {
-        numOpcodesInList_ = opList_.length / 2;
+        numOpsInList_ = opList_.length;
 
         super.initializeAutonomous();
 
@@ -68,20 +68,20 @@ public class AutonomousCommon extends RobotHardware {
     }
 
     int getCurrentOpcode() {
-        if (numOpcodesInList_ == 0) return OP_STOP;
+        if (numOpsInList_ == 0) return OP_STOP;
 
         if (currOpIdInList_ < 0) {
             currOpIdInList_ = -1;
             if (moveToNextOpcode() == false) return OP_STOP;
         }
 
-        return (int) opList_[2 * currOpIdInList_];
+        return (int) opList_[currOpIdInList_].opcode();
     }
 
-    double getCurrentOprand() {
+    double getCurrentOperand() {
         if (currOpIdInList_ >= 0 &&
-            currOpIdInList_ < numOpcodesInList_) {
-            return opList_[(2 * currOpIdInList_) + 1];
+            currOpIdInList_ < numOpsInList_) {
+            return opList_[currOpIdInList_].operand();
         }
 
         return 0;
@@ -89,7 +89,7 @@ public class AutonomousCommon extends RobotHardware {
 
     void runCurrentOpcode() {
         final int opcode = getCurrentOpcode();
-        final double oprand = getCurrentOprand();
+        final double operand = getCurrentOperand();
         boolean finish_flag = false;
         switch (opcode) {
             case OP_DRIVE_TRAIN_RESET_ENCODER:
@@ -99,28 +99,28 @@ public class AutonomousCommon extends RobotHardware {
                 finish_flag = runDriveTrainResetHeading();
                 break;
             case OP_DRIVE_TRAIN_SHIFT_GEAR:
-                finish_flag = runDriveTrainShiftGear(oprand);
+                finish_flag = runDriveTrainShiftGear(operand);
                 break;
             case OP_DRIVE_TRAIN_FORWARD:
-                finish_flag = runDriveTrain(WheelMotors.DriveMode.FORWARD, (int)oprand);
+                finish_flag = runDriveTrain(WheelMotors.DriveMode.FORWARD, (int)operand);
                 break;
             case OP_DRIVE_TRAIN_BACKWARD:
-                finish_flag = runDriveTrain(WheelMotors.DriveMode.BACKWARD, oprand);
+                finish_flag = runDriveTrain(WheelMotors.DriveMode.BACKWARD, operand);
                 break;
             case OP_DRIVE_TRAIN_TURN_LEFT:
-                finish_flag = runDriveTrain(WheelMotors.DriveMode.TURN_LEFT, oprand);
+                finish_flag = runDriveTrain(WheelMotors.DriveMode.TURN_LEFT, operand);
                 break;
             case OP_DRIVE_TRAIN_TURN_RIGHT:
-                finish_flag = runDriveTrain(WheelMotors.DriveMode.TURN_RIGHT, oprand);
+                finish_flag = runDriveTrain(WheelMotors.DriveMode.TURN_RIGHT, operand);
                 break;
             case OP_DRIVE_TRAIN_SHIFT_LEFT:
-                finish_flag = runDriveTrain(WheelMotors.DriveMode.SHIFT_LEFT, oprand);
+                finish_flag = runDriveTrain(WheelMotors.DriveMode.SHIFT_LEFT, operand);
                 break;
             case OP_DRIVE_TRAIN_SHIFT_RIGHT:
-                finish_flag = runDriveTrain(WheelMotors.DriveMode.SHIFT_RIGHT, oprand);
+                finish_flag = runDriveTrain(WheelMotors.DriveMode.SHIFT_RIGHT, operand);
                 break;
             default: // OP_STOP
-                break;
+                finish_flag = true;
         }
 
         if (finish_flag == true) {
@@ -133,11 +133,11 @@ public class AutonomousCommon extends RobotHardware {
     //   - false if all opcodes in the opList_ have been run
     boolean moveToNextOpcode() {
         currOpStartTime_ = timer_.time();
-        if (numOpcodesInList_ == 0) return false;
+        if (numOpsInList_ == 0) return false;
 
         ++currOpIdInList_;   // Increase Op ID in opList_ by 1
-        if (currOpIdInList_ >= numOpcodesInList_) {
-            currOpIdInList_ = numOpcodesInList_;
+        if (currOpIdInList_ >= numOpsInList_) {
+            currOpIdInList_ = numOpsInList_;
             return false;
         }
 
@@ -151,11 +151,11 @@ public class AutonomousCommon extends RobotHardware {
                 runDriveTrainResetEncoder();
                 break;
             case OP_DRIVE_TRAIN_TURN_LEFT:
-                getDriveTrain().modifyTargetHeading(getCurrentOprand());
+                getDriveTrain().modifyTargetHeading(getCurrentOperand());
                 runDriveTrainResetEncoder();
                 break;
             case OP_DRIVE_TRAIN_TURN_RIGHT:
-                getDriveTrain().modifyTargetHeading(-(getCurrentOprand()));
+                getDriveTrain().modifyTargetHeading(-(getCurrentOperand()));
                 runDriveTrainResetEncoder();
                 break;
             default:
