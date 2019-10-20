@@ -1,7 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -20,6 +22,9 @@ public class RobotHardware extends LinearOpMode {
 
     /// Detect red/blue line color sensor
     DetectColor detectRedBlueLine_ = null;
+
+    /// Detect front distance
+    DetectDistance detFrontDistance_ = null;
 
     @Override
     public void runOpMode() {
@@ -64,9 +69,16 @@ public class RobotHardware extends LinearOpMode {
     }
 
     void createDetectRedBlueLineSensor() {
-        NormalizedColorSensor sensor = hardwareMap.get(NormalizedColorSensor.class, "detLineSensor");
+        ColorSensor sensor = hardwareMap.get(ColorSensor.class, "detLineSensor");
 
         detectRedBlueLine_ = new DetectColor(sensor,
                                              telemetry);
+    }
+
+    void createDetectFrontDistanceSensor() {
+        ModernRoboticsI2cRangeSensor sensor = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "detFrontDistSensor");
+
+        detFrontDistance_ = new DetectDistance(sensor,
+                                               telemetry);
     }
 }
