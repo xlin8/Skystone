@@ -4,7 +4,6 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
-import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -19,6 +18,9 @@ public class RobotHardware extends LinearOpMode {
 
     /// Tfod for detecting skystone
     DetectSkystone detectSkystone_ = null;
+
+    /// VuMark for detecting navigation target
+    DetectNavigationTarget detectNavigationTarget_ = null;
 
     /// Detect red/blue line color sensor
     DetectColor detectRedBlueLine_ = null;
@@ -58,7 +60,7 @@ public class RobotHardware extends LinearOpMode {
                                      telemetry);
     }
 
-    private void createDetectSkystone(){
+    void createDetectSkystone(){
         int tfod_monitor_view_id = hardwareMap.appContext.getResources().getIdentifier(
                 "tfodMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         // WebcamName webcam_name = hardwareMap.get(WebcamName.class, "webcam");
@@ -66,6 +68,16 @@ public class RobotHardware extends LinearOpMode {
         detectSkystone_ = new DetectSkystone(webcam_name,
                                              tfod_monitor_view_id,
                                              telemetry);
+    }
+
+    void createDetectNavigationTarget() {
+        int camera_monitor_view_id = hardwareMap.appContext.getResources().getIdentifier(
+                "cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        // WebcamName webcam_name = hardwareMap.get(WebcamName.class, "webcam");
+        WebcamName webcam_name = null;
+        detectNavigationTarget_ = new DetectNavigationTarget(webcam_name,
+                                                             camera_monitor_view_id,
+                                                             telemetry);
     }
 
     void createDetectRedBlueLineSensor() {
