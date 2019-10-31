@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.vuforia.ViewerParameters;
+
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -25,6 +27,37 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
 
 public class DetectNavigationTarget {
+    // Trackable targets
+    static final int SKY_STONE = 0;
+    static final int BLUE_REAR_BRIDGE =1;
+    static final int RED_REAR_BRIDGE = 2;
+    static final int RED_FRONT_BRIDGE = 3;
+    static final int BLUE_FRONT_BRIDGE = 4;
+    static final int RED_PERIMETER_1 = 5;
+    static final int RED_PERIMETER_2 = 6;
+    static final int FRONT_PERIMETER_1 = 7;
+    static final int FRONT_PERIMETER_2 = 8;
+    static final int BLUE_PERIMETER_1 = 9;
+    static final int BLUE_PERIMETER_2 = 10;
+    static final int REAR_PERIMETER_1 = 11;
+    static final int REAR_PERIMETER_2 = 12;
+    static final int NUM_TRACKABLES = 13;
+
+    String [] trackableNames_ = {
+        "SkyStone",
+        "Blue Rear Bridge",
+        "Red Rear Bridge",
+        "Red Front Bridge",
+        "Blue Front Bridge",
+        "Red Perimeter 1",
+        "Red Perimeter 2",
+        "Front Perimeter 1",
+        "Front Perimeter 2",
+        "Blue Perimeter 1",
+        "Blue Perimeter 2",
+        "Rear Perimeter 1",
+        "Rear Perimeter 1"
+    };
 
     private static final String VUFORIA_KEY =
             "AbCbPUz/////AAABmRlaEryonEVfsxxT+iHrRnIO+B0SFb6vzFX7lYpj3WD2pSxJG1pAEJeUJR3XWKQqKUbO8KUhq/4mnx2uvCcUM1Rg5/3f+qR0VytJNlyYBXAL9kvbpHVbHI/qjQziYKQ0/1SlKj4KX9nHDmPImH8Vd9vfXauFXJ8bnVE175BVln5MS6bYiK4vvxecGyrIvXpjojrYoHdynFVWcIiAtyy5pSjDbavzC/R12FO2uonKGuWNYfRDPUUnABkpSnObZGu6dxl+n1TznC/jBdWFACKJHaaxfqEiXdUkgXy3LUvUqSjhuYrYQAoL6hVlzkSEJs4AQkvybTeUCMRhCBO6cfheYDQuJnFFft8REdT6d5fyx4a1";
@@ -55,25 +88,12 @@ public class DetectNavigationTarget {
     private int cameraMonitorViewId_ = 0;
     private Telemetry telemetry_ = null;
 
+    private VuforiaLocalizer.Parameters vuforiaParameters_ = null;
     private VuforiaLocalizer vuforia_ = null;
     private VuforiaTrackables trackables_ = null;
 
-    private VuforiaTrackable stoneTarget_ = null;
-    private VuforiaTrackable blueRearBridge_ = null;
-    private VuforiaTrackable redRearBridge_ = null;
-    private VuforiaTrackable redFrontBridge_ = null;
-    private VuforiaTrackable blueFrontBridge_ = null;
-    private VuforiaTrackable red1_ = null;
-    private VuforiaTrackable red2_ = null;
-    private VuforiaTrackable front1_ = null;
-    private VuforiaTrackable front2_ = null;
-    private VuforiaTrackable blue1_ = null;
-    private VuforiaTrackable blue2_ = null;
-    private VuforiaTrackable rear1_ = null;
-    private VuforiaTrackable rear2_ = null;
-
     // For convenience, gather together all the trackable objects in one easily-iterable collection */
-    List<VuforiaTrackable> allTargets_ = null;
+    List<VuforiaTrackable> allTrackablesInList_ = null;
 
     private OpenGLMatrix lastLocation_;
     private double tX_ = 0;
@@ -89,12 +109,14 @@ public class DetectNavigationTarget {
         webcamName_=webcam_name;
         cameraMonitorViewId_=camera_monitor_view_id;
         telemetry_=telemetry;
+
+        setup();
     }
 
-    public void setup() {
+    private void setup() {
         initVuforia();
 
-        initTrackableTargets();
+        initTrackables();
 
         initPhoneLocation();
     }
@@ -114,63 +136,28 @@ public class DetectNavigationTarget {
         /*
          * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
          */
-        VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId_);
+        vuforiaParameters_ = new VuforiaLocalizer.Parameters(cameraMonitorViewId_);
 
-        parameters.vuforiaLicenseKey = VUFORIA_KEY;
+        vuforiaParameters_.vuforiaLicenseKey = VUFORIA_KEY;
 
-        if (webcamName_ != null) parameters.cameraName = webcamName_;
-        else parameters.cameraDirection = CAMERA_CHOICE;
+        if (webcamName_ != null) vuforiaParameters_.cameraName = webcamName_;
+        else vuforiaParameters_.cameraDirection = CAMERA_CHOICE;
 
         //  Instantiate the Vuforia engine
-        vuforia_ = ClassFactory.getInstance().createVuforia(parameters);
+        vuforia_ = ClassFactory.getInstance().createVuforia(vuforiaParameters_);
     }
 
-    private void initTrackableTargets() {
+    private void initTrackables() {
         // Load the data sets for the trackable objects. These particular data
         // sets are stored in the 'assets' part of our application.
         trackables_ = this.vuforia_.loadTrackablesFromAsset("Skystone");
 
-        stoneTarget_ = trackables_.get(0);
-        stoneTarget_.setName("Stone Target");
+        for (int i=0; i<NUM_TRACKABLES; ++i) {
+            trackables_.get(i).setName(trackableNames_[i]);
+        }
 
-        blueRearBridge_ = trackables_.get(1);
-        blueRearBridge_.setName("Blue Rear Bridge");
-
-        redRearBridge_ = trackables_.get(2);
-        redRearBridge_.setName("Red Rear Bridge");
-
-        redFrontBridge_ = trackables_.get(3);
-        redFrontBridge_.setName("Red Front Bridge");
-
-        blueFrontBridge_ = trackables_.get(4);
-        blueFrontBridge_.setName("Blue Front Bridge");
-
-        red1_ = trackables_.get(5);
-        red1_.setName("Red Perimeter 1");
-
-        red2_ = trackables_.get(6);
-        red2_.setName("Red Perimeter 2");
-
-        front1_ = trackables_.get(7);
-        front1_.setName("Front Perimeter 1");
-
-        front2_ = trackables_.get(8);
-        front2_.setName("Front Perimeter 2");
-
-        blue1_ = trackables_.get(9);
-        blue1_.setName("Blue Perimeter 1");
-
-        blue2_ = trackables_.get(10);
-        blue2_.setName("Blue Perimeter 2");
-
-        rear1_ = trackables_.get(11);
-        rear1_.setName("Rear Perimeter 1");
-
-        rear2_ = trackables_.get(12);
-        rear2_.setName("Rear Perimeter 2");
-
-        allTargets_ = new ArrayList<VuforiaTrackable>();
-        allTargets_.addAll(trackables_);
+        allTrackablesInList_ = new ArrayList<VuforiaTrackable>();
+        allTrackablesInList_.addAll(trackables_);
 
         /**
          * In order for localization to work, we need to tell the system where each target is on the field, and
@@ -193,57 +180,57 @@ public class DetectNavigationTarget {
         // Set the position of the Stone Target.  Since it's not fixed in position, assume it's at the field origin.
         // Rotated it to to face forward, and raised it to sit on the ground correctly.
         // This can be used for generic target-centric approach algorithms
-        stoneTarget_.setLocation(OpenGLMatrix
+        trackables_.get(SKY_STONE).setLocation(OpenGLMatrix
                 .translation(0, 0, stoneZ)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, -90)));
 
         //Set the position of the bridge support targets with relation to origin (center of field)
-        blueFrontBridge_.setLocation(OpenGLMatrix
+        trackables_.get(BLUE_FRONT_BRIDGE).setLocation(OpenGLMatrix
                 .translation(-bridgeX, bridgeY, bridgeZ)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 0, bridgeRotY, bridgeRotZ)));
 
-        blueRearBridge_.setLocation(OpenGLMatrix
+        trackables_.get(BLUE_REAR_BRIDGE).setLocation(OpenGLMatrix
                 .translation(-bridgeX, bridgeY, bridgeZ)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 0, -bridgeRotY, bridgeRotZ)));
 
-        redFrontBridge_.setLocation(OpenGLMatrix
+        trackables_.get(RED_FRONT_BRIDGE).setLocation(OpenGLMatrix
                 .translation(-bridgeX, -bridgeY, bridgeZ)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 0, -bridgeRotY, 0)));
 
-        redRearBridge_.setLocation(OpenGLMatrix
+        trackables_.get(RED_REAR_BRIDGE).setLocation(OpenGLMatrix
                 .translation(bridgeX, -bridgeY, bridgeZ)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 0, bridgeRotY, 0)));
 
         //Set the position of the perimeter targets with relation to origin (center of field)
-        red1_.setLocation(OpenGLMatrix
+        trackables_.get(RED_PERIMETER_1).setLocation(OpenGLMatrix
                 .translation(quadField, -halfField, mmTargetHeight)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, 180)));
 
-        red2_.setLocation(OpenGLMatrix
+        trackables_.get(RED_PERIMETER_2).setLocation(OpenGLMatrix
                 .translation(-quadField, -halfField, mmTargetHeight)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, 180)));
 
-        front1_.setLocation(OpenGLMatrix
+        trackables_.get(FRONT_PERIMETER_1).setLocation(OpenGLMatrix
                 .translation(-halfField, -quadField, mmTargetHeight)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0 , 90)));
 
-        front2_.setLocation(OpenGLMatrix
+        trackables_.get(FRONT_PERIMETER_2).setLocation(OpenGLMatrix
                 .translation(-halfField, quadField, mmTargetHeight)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, 90)));
 
-        blue1_.setLocation(OpenGLMatrix
+        trackables_.get(BLUE_PERIMETER_1).setLocation(OpenGLMatrix
                 .translation(-quadField, halfField, mmTargetHeight)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, 0)));
 
-        blue2_.setLocation(OpenGLMatrix
+        trackables_.get(BLUE_PERIMETER_2).setLocation(OpenGLMatrix
                 .translation(quadField, halfField, mmTargetHeight)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, 0)));
 
-        rear1_.setLocation(OpenGLMatrix
+        trackables_.get(REAR_PERIMETER_1).setLocation(OpenGLMatrix
                 .translation(halfField, quadField, mmTargetHeight)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0 , -90)));
 
-        rear2_.setLocation(OpenGLMatrix
+        trackables_.get(REAR_PERIMETER_2).setLocation(OpenGLMatrix
                 .translation(halfField, -quadField, mmTargetHeight)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, -90)));
     }
@@ -277,31 +264,36 @@ public class DetectNavigationTarget {
         // Rotate the phone vertical about the X axis if it's in portrait mode
         if (PHONE_IS_PORTRAIT) phoneX_rotate = 90 ;
 
-
         OpenGLMatrix robotFromCamera = OpenGLMatrix
                 .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, YZX, DEGREES, phoneY_rotate, phoneZ_rotate, phoneX_rotate));
+
+        /**  Let all the trackable listeners know where the phone is.  */
+        for (VuforiaTrackable trackable : allTrackablesInList_) {
+            ((VuforiaTrackableDefaultListener) trackable.getListener()).setPhoneInformation(robotFromCamera, vuforiaParameters_.cameraDirection);
+        }
     }
 
     boolean determineRobotLocation() {
         // check all the trackable targets to see which one (if any) is visible.
-        lastLocation_ = null;
-        for (VuforiaTrackable target : allTargets_) {
+        boolean exist_visible_target_flag = false;
+        for (VuforiaTrackable target : allTrackablesInList_) {
             if (((VuforiaTrackableDefaultListener)target.getListener()).isVisible()) {
-                telemetry_.addData("Visible Target", target.getName());
+                telemetry_.addData("Visible target", target.getName());
+                exist_visible_target_flag = true;
 
                 // getUpdatedRobotLocation() will return null if no new information is available since
                 // the last time that call was made, or if the trackable is not currently visible.
-                OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener)target.getListener()).getUpdatedRobotLocation();
-                if (robotLocationTransform != null) {
-                    lastLocation_ = robotLocationTransform;
+                OpenGLMatrix robot_location_transform = ((VuforiaTrackableDefaultListener)target.getListener()).getUpdatedRobotLocation();
+                if (robot_location_transform != null) {
+                    lastLocation_ = robot_location_transform;
                 }
                 break;
             }
         }
 
-        if (lastLocation_ == null) {
-            telemetry_.addData("Visible Target", "none");
+        if (exist_visible_target_flag == false) {
+            telemetry_.addData("Visible target", "None");
             telemetry_.update();
             return false;
         }
@@ -313,21 +305,27 @@ public class DetectNavigationTarget {
 
     // find out if VuMark is visible to the phone camera.
     // @return True if VuMark found, false if not.
-    boolean findTarget(VuforiaTrackable target) {
+    boolean findTarget(int trackable_id) {
+        if (trackable_id < 0 || trackable_id >= NUM_TRACKABLES) return false;
+        return findTarget(trackables_.get(trackable_id));
+    }
+
+    private boolean findTarget(VuforiaTrackable target) {
         // See if any of the instances of the template are currently visible.
         VuMarkInstanceId instance_id = ((VuforiaTrackableDefaultListener) target.getListener()).getVuMarkInstanceId();
-
-        if (instance_id == null) {
-            lastLocation_ = null;
-            return false;
+        OpenGLMatrix robot_location_transform = null;
+        if (instance_id != null) {
+            robot_location_transform = ((VuforiaTrackableDefaultListener) target.getListener()).getPose();
         }
 
-        lastLocation_ = ((VuforiaTrackableDefaultListener) target.getListener()).getPose();
-        if (lastLocation_ == null) {
-            telemetry_.addData("Visible Target", "none");
+        if (robot_location_transform == null) {
+            telemetry_.addData("Visible target", "None");
             telemetry_.update();
             return false;
         }
+
+        telemetry_.addData("Visible target", target.getName());
+        lastLocation_ = robot_location_transform;
 
         translateToLastLocationsToDistanceAndAngles();
         showRobotLocation();
@@ -360,13 +358,13 @@ public class DetectNavigationTarget {
         telemetry_.addData("Location", formatLocation(location));
     }
 
-    public void showLastLoation() {
+    public void showLastLocation() {
         telemetry_.addData("Location", formatLocation(lastLocation_));
     }
 
     public void showRobotLocation() {
-        telemetry_.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f", tX_, tY_, tZ_);
-        telemetry_.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rX_, rY_, rZ_);
+        telemetry_.addData("Position (In)", "{X, Y, Z} = %.1f, %.1f, %.1f", tX_, tY_, tZ_);
+        telemetry_.addData("Rotation (Degree)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rX_, rY_, rZ_);
         telemetry_.update();
     }
 }

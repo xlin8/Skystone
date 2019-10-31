@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp(name="TestNavigationTarget", group="FS")
-@Disabled
+// @Disabled
 public class TestDetectNavigationTarget extends RobotHardware {
 
     @Override
@@ -27,7 +27,7 @@ public class TestDetectNavigationTarget extends RobotHardware {
     }
 
     public void initialize() {
-        createDetectFrontDistanceSensor();
+        createDetectNavigationTarget();
     }
 
     void initializeWhenStart() {
