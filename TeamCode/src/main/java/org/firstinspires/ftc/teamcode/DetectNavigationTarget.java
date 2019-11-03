@@ -43,7 +43,7 @@ public class DetectNavigationTarget {
     static final int REAR_PERIMETER_2 = 12;
     static final int NUM_TRACKABLES = 13;
 
-    String [] trackableNames_ = {
+    static final String [] trackableNames_ = {
         "SkyStone",
         "Blue Rear Bridge",
         "Red Rear Bridge",
@@ -56,7 +56,8 @@ public class DetectNavigationTarget {
         "Blue Perimeter 1",
         "Blue Perimeter 2",
         "Rear Perimeter 1",
-        "Rear Perimeter 1"
+        "Rear Perimeter 1",
+        "None"
     };
 
     private static final String VUFORIA_KEY =
@@ -95,6 +96,7 @@ public class DetectNavigationTarget {
     // For convenience, gather together all the trackable objects in one easily-iterable collection */
     List<VuforiaTrackable> allTrackablesInList_ = null;
 
+    private int lastTrackableId_ = NUM_TRACKABLES;
     private OpenGLMatrix lastLocation_;
     private double tX_ = 0;
     private double tY_ = 0;
@@ -279,7 +281,7 @@ public class DetectNavigationTarget {
         boolean exist_visible_target_flag = false;
         for (VuforiaTrackable target : allTrackablesInList_) {
             if (((VuforiaTrackableDefaultListener)target.getListener()).isVisible()) {
-                telemetry_.addData("Visible target", target.getName());
+                lastTrackableId_ = convertTrackableNameToId(target.getName());
                 exist_visible_target_flag = true;
 
                 // getUpdatedRobotLocation() will return null if no new information is available since
@@ -288,6 +290,7 @@ public class DetectNavigationTarget {
                 if (robot_location_transform != null) {
                     lastLocation_ = robot_location_transform;
                 }
+
                 break;
             }
         }
@@ -306,8 +309,15 @@ public class DetectNavigationTarget {
     // find out if VuMark is visible to the phone camera.
     // @return True if VuMark found, false if not.
     boolean findTarget(int trackable_id) {
-        if (trackable_id < 0 || trackable_id >= NUM_TRACKABLES) return false;
-        return findTarget(trackables_.get(trackable_id));
+        if (trackable_id >=0 &&
+            trackable_id < NUM_TRACKABLES &&
+            findTarget(trackables_.get(trackable_id))==true) {
+            lastTrackableId_ = trackable_id;
+            return true;
+        }
+
+        lastTrackableId_ = NUM_TRACKABLES;
+        return false;
     }
 
     private boolean findTarget(VuforiaTrackable target) {
@@ -324,7 +334,6 @@ public class DetectNavigationTarget {
             return false;
         }
 
-        telemetry_.addData("Visible target", target.getName());
         lastLocation_ = robot_location_transform;
 
         translateToLastLocationsToDistanceAndAngles();
@@ -346,6 +355,14 @@ public class DetectNavigationTarget {
         rZ_ = rotation.thirdAngle;
     }
 
+    private int convertTrackableNameToId(String name) {
+        for (int i=0; i<NUM_TRACKABLES; ++i) {
+            if (trackables_.get(i).getName().equals(name)==true) return i;
+        }
+
+        return NUM_TRACKABLES;
+    }
+
     /**
      * Format OpenGLMatrix object for human viewing.
      * @return OpenGLMatrix description.
@@ -363,8 +380,13 @@ public class DetectNavigationTarget {
     }
 
     public void showRobotLocation() {
-        telemetry_.addData("Position (In)", "{X, Y, Z} = %.1f, %.1f, %.1f", tX_, tY_, tZ_);
-        telemetry_.addData("Rotation (Degree)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rX_, rY_, rZ_);
+        telemetry_.addData("Visible target", trackableNames_[lastTrackableId_]);
+
+        if (lastTrackableId_ < NUM_TRACKABLES) {
+            telemetry_.addData("Position (In)", "{X, Y, Z} = %.1f, %.1f, %.1f", tX_, tY_, tZ_);
+            telemetry_.addData("Rotation (Degree)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rX_, rY_, rZ_);
+        }
+
         telemetry_.update();
     }
 }
