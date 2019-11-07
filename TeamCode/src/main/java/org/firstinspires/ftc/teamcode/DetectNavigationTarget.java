@@ -56,7 +56,7 @@ public class DetectNavigationTarget {
         "Blue Perimeter 1",
         "Blue Perimeter 2",
         "Rear Perimeter 1",
-        "Rear Perimeter 1",
+        "Rear Perimeter 2",
         "None"
     };
 
@@ -314,7 +314,7 @@ public class DetectNavigationTarget {
             // Loop through all trackable targets to see if the required one is visible
             for (VuforiaTrackable target : allTrackablesInList_) {
                 if (((VuforiaTrackableDefaultListener)target.getListener()).isVisible()) {
-                    if (trackables_.get(trackable_id).getName().equals(target.getName())==true) {
+                    if (trackableNames_[trackable_id].equals(target.getName())==true) {
                         lastTrackableId_ = trackable_id;
 
                         // getUpdatedRobotLocation() will return null if no new information is available since
