@@ -309,14 +309,31 @@ public class DetectNavigationTarget {
     // find out if VuMark is visible to the phone camera.
     // @return True if VuMark found, false if not.
     boolean findTarget(int trackable_id) {
-        if (trackable_id >=0 &&
-            trackable_id < NUM_TRACKABLES &&
-            findTarget(trackables_.get(trackable_id))==true) {
-            lastTrackableId_ = trackable_id;
-            return true;
+        if (trackable_id >= 0 &&
+            trackable_id < NUM_TRACKABLES) {
+            // Loop through all trackable targets to see if the required one is visible
+            for (VuforiaTrackable target : allTrackablesInList_) {
+                if (((VuforiaTrackableDefaultListener)target.getListener()).isVisible()) {
+                    if (trackables_.get(trackable_id).getName().equals(target.getName())==true) {
+                        lastTrackableId_ = trackable_id;
+
+                        // getUpdatedRobotLocation() will return null if no new information is available since
+                        // the last time that call was made, or if the trackable is not currently visible.
+                        OpenGLMatrix robot_location_transform = ((VuforiaTrackableDefaultListener) target.getListener()).getUpdatedRobotLocation();
+                        if (robot_location_transform != null) {
+                            lastLocation_ = robot_location_transform;
+                        }
+
+                        translateToLastLocationsToDistanceAndAngles();
+                        showRobotLocation();
+                        return true;
+                    }
+                }
+            }
         }
 
-        lastTrackableId_ = NUM_TRACKABLES;
+        telemetry_.addData("Visible target", "None");
+        telemetry_.update();
         return false;
     }
 
