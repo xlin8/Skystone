@@ -50,7 +50,7 @@ public class AutonomousCommon extends RobotHardware {
         super.initializeAutonomous();
 
         // Activate Tfod for detecting skystone
-        getDetectSkystone().setupTfod();
+        // detectSkystone().setupTfod();
     }
 
     void initializeWhenStart() {
@@ -60,11 +60,11 @@ public class AutonomousCommon extends RobotHardware {
         currOpIdInList_ = -1;
         currOpStartTime_ = 0;
 
-        getDriveTrain().resetTargetHeading();
+        driveTrain().resetTargetHeading();
     }
 
     void cleanUpAtEndOfRun() {
-        getDetectSkystone().shutdownTfod();
+        detectSkystone().shutdownTfod();
     }
 
     int getCurrentOpcode() {
@@ -102,22 +102,22 @@ public class AutonomousCommon extends RobotHardware {
                 finish_flag = runDriveTrainShiftGear(operand);
                 break;
             case OP_DRIVE_TRAIN_FORWARD:
-                finish_flag = runDriveTrain(WheelMotors.DriveMode.FORWARD, (int)operand);
+                finish_flag = runDriveTrain(DriveTrainDriveMode.FORWARD, (int)operand);
                 break;
             case OP_DRIVE_TRAIN_BACKWARD:
-                finish_flag = runDriveTrain(WheelMotors.DriveMode.BACKWARD, operand);
+                finish_flag = runDriveTrain(DriveTrainDriveMode.BACKWARD, operand);
                 break;
             case OP_DRIVE_TRAIN_TURN_LEFT:
-                finish_flag = runDriveTrain(WheelMotors.DriveMode.TURN_LEFT, operand);
+                finish_flag = runDriveTrain(DriveTrainDriveMode.TURN_LEFT, operand);
                 break;
             case OP_DRIVE_TRAIN_TURN_RIGHT:
-                finish_flag = runDriveTrain(WheelMotors.DriveMode.TURN_RIGHT, operand);
+                finish_flag = runDriveTrain(DriveTrainDriveMode.TURN_RIGHT, operand);
                 break;
             case OP_DRIVE_TRAIN_SHIFT_LEFT:
-                finish_flag = runDriveTrain(WheelMotors.DriveMode.SHIFT_LEFT, operand);
+                finish_flag = runDriveTrain(DriveTrainDriveMode.SHIFT_LEFT, operand);
                 break;
             case OP_DRIVE_TRAIN_SHIFT_RIGHT:
-                finish_flag = runDriveTrain(WheelMotors.DriveMode.SHIFT_RIGHT, operand);
+                finish_flag = runDriveTrain(DriveTrainDriveMode.SHIFT_RIGHT, operand);
                 break;
             default: // OP_STOP
                 finish_flag = true;
@@ -151,11 +151,11 @@ public class AutonomousCommon extends RobotHardware {
                 runDriveTrainResetEncoder();
                 break;
             case OP_DRIVE_TRAIN_TURN_LEFT:
-                getDriveTrain().modifyTargetHeading(getCurrentOperand());
+                driveTrain().modifyTargetHeading(getCurrentOperand());
                 runDriveTrainResetEncoder();
                 break;
             case OP_DRIVE_TRAIN_TURN_RIGHT:
-                getDriveTrain().modifyTargetHeading(-(getCurrentOperand()));
+                driveTrain().modifyTargetHeading(-(getCurrentOperand()));
                 runDriveTrainResetEncoder();
                 break;
             default:
@@ -166,7 +166,7 @@ public class AutonomousCommon extends RobotHardware {
     }
 
     boolean runDriveTrainResetEncoder() {
-        DriveTrain drive_train = getDriveTrain();
+        DriveTrain drive_train = driveTrain();
         final double max_reset_time = 0.5;
         do {
             double time = timer_.time();
@@ -182,19 +182,19 @@ public class AutonomousCommon extends RobotHardware {
     }
 
     boolean runDriveTrainResetHeading() {
-        getDriveTrain().setCurrentHeadingAsTargetHeading();
+        driveTrain().setCurrentHeadingAsTargetHeading();
         return true;
     }
 
     boolean runDriveTrainShiftGear(double power_factor) {
-        getDriveTrain().setPowerFactor(power_factor);
+        driveTrain().setPowerFactor(power_factor);
         return true;
     }
 
-    boolean runDriveTrain(WheelMotors.DriveMode drive_mode,
+    boolean runDriveTrain(DriveTrainDriveMode drive_mode,
                           double drive_parameter) {
-        return getDriveTrain().driveByMode(drive_mode,
-                                           drive_parameter,
-                                           timer_.time());
+        return driveTrain().driveByMode(drive_mode,
+                                        drive_parameter,
+                                        timer_.time());
     }
 }

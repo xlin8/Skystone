@@ -5,9 +5,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
-
 public class DriveTrain {
-    WheelMotors wheelMotors_ = null;
+    MecanumDriveTrain mecanumDrive_ = null;
     RevImu revImu_ = null;
 
     private Telemetry telemetry_;
@@ -15,28 +14,30 @@ public class DriveTrain {
     private double targetHeading_ = 0.0;
 
     // Code to run when op mode is initialized
-    public DriveTrain(DcMotor motorRF,
-                      DcMotor motorRB,
-                      DcMotor motorLF,
-                      DcMotor motorLB,
-                      BNO055IMU imu,
+    public DriveTrain(BNO055IMU imu,
                       Telemetry telemetry) {
-       wheelMotors_ = new WheelMotors(motorRF,
-                                      motorRB,
-                                      motorLF,
-                                      motorLB,
-                                      telemetry);
        revImu_ = new RevImu(imu,
                             telemetry);
 
        telemetry_=telemetry;
     }
 
-    WheelMotors getWheelMotors() {
-        return wheelMotors_;
+    void createMecanumDriveTrain(DcMotor motorRF,
+                                 DcMotor motorRB,
+                                 DcMotor motorLF,
+                                 DcMotor motorLB) {
+        mecanumDrive_ = new MecanumDriveTrain(motorRF,
+                                              motorRB,
+                                              motorLF,
+                                              motorLB,
+                                              telemetry_);
     }
 
-    RevImu getRevImu() {
+    MecanumDriveTrain mecanumDriveTrain() {
+        return mecanumDrive_;
+    }
+
+    RevImu revImu() {
         return revImu_;
     }
 
@@ -44,7 +45,7 @@ public class DriveTrain {
         targetHeading_ = 0.0;
     }
 
-    double getTargetHeading() {
+    double targetHeading() {
         return targetHeading_;
     }
 
@@ -57,56 +58,71 @@ public class DriveTrain {
     }
 
     void resetEncoders(double time) {
-        wheelMotors_.resetEncoders(time);
+        if (mecanumDrive_ != null) mecanumDrive_.resetEncoders(time);
     }
 
     void useEncoders() {
-        wheelMotors_.useEncoders();
+        if (mecanumDrive_ != null) mecanumDrive_.useEncoders();
     }
 
     boolean allEncodersAreReset() {
-        return wheelMotors_.allEncodersAreReset();
+        if (mecanumDrive_ != null) return mecanumDrive_.allEncodersAreReset();
+        return false;
     }
 
     void setPowerFactor(double power_factor) {
-        wheelMotors_.setPowerFactor(power_factor);
+        if (mecanumDrive_ != null) mecanumDrive_.setPowerFactor(power_factor);
     }
 
-    boolean driveByMode(WheelMotors.DriveMode drive_mode,
+    boolean driveByMode(DriveTrainDriveMode drive_mode,
                         double drive_parameter,
                         double time) {
+        if (mecanumDrive_ != null) {
+            return mecanumDriveByMode(drive_mode, drive_parameter, time);
+        }
+
+        return false;
+    }
+
+    boolean mecanumDriveByMode(DriveTrainDriveMode drive_mode,
+                               double drive_parameter,
+                               double time) {
         if (drive_parameter <= 0.0) {
-            wheelMotors_.setPower(0, 0, 0,0);
+            mecanumDrive_.setPower(0, 0, 0,0);
             return true;
         }
 
         int target_encoder_cnt = 0;
         boolean finish_flag = false;
-        if (drive_mode == WheelMotors.DriveMode.FORWARD ||
-                drive_mode == WheelMotors.DriveMode.BACKWARD) {
-            target_encoder_cnt = wheelMotors_.convertDistanceToEncoderCount(drive_parameter);
-        } else if (drive_mode == WheelMotors.DriveMode.SHIFT_LEFT ||
-                   drive_mode == WheelMotors.DriveMode.SHIFT_RIGHT) {
-            target_encoder_cnt = wheelMotors_.convertShiftDistanceToEncoderCount(drive_parameter);
-        } else if (drive_mode == WheelMotors.DriveMode.TURN_LEFT ||
-                   drive_mode == WheelMotors.DriveMode.TURN_RIGHT) {
-            target_encoder_cnt = wheelMotors_.convertDegreeToEncoderCount(drive_parameter);
-        } else {
-            finish_flag = true;
+        switch (drive_mode) {
+            case FORWARD:
+            case BACKWARD:
+                target_encoder_cnt = mecanumDrive_.convertDistanceToEncoderCount(drive_parameter);
+                break;
+            case SHIFT_LEFT:
+            case SHIFT_RIGHT:
+                target_encoder_cnt = mecanumDrive_.convertShiftDistanceToEncoderCount(drive_parameter);
+                break;
+            case TURN_LEFT:
+            case TURN_RIGHT:
+                target_encoder_cnt = mecanumDrive_.convertDegreeToEncoderCount(drive_parameter);
+                break;
+            default:
+                finish_flag = true;
         }
 
         if (finish_flag == false) {
-            wheelMotors_.useEncoders();
+            mecanumDrive_.useEncoders();
 
-            if (wheelMotors_.reachToTargetEncoderCount(target_encoder_cnt) == true) {
+            if (mecanumDrive_.reachToTargetEncoderCount(target_encoder_cnt) == true) {
                 finish_flag = true;
             } else {
-                wheelMotors_.driveByMode(drive_mode,
+                mecanumDrive_.driveByMode(drive_mode,
                         revImu_,
                         targetHeading_,
                         false);
 
-                if (wheelMotors_.isEncoderStuck(time) == true) {
+                if (mecanumDrive_.isEncoderStuck(time) == true) {
                     finish_flag = true;
                 }
             }
@@ -114,10 +130,10 @@ public class DriveTrain {
 
         if (finish_flag == false) return false;
 
-        wheelMotors_.setPower(0, 0, 0,0);
+        mecanumDrive_.setPower(0, 0, 0,0);
 
-        if (drive_mode == WheelMotors.DriveMode.SHIFT_LEFT ||
-                drive_mode == WheelMotors.DriveMode.SHIFT_RIGHT) {
+        if (drive_mode == DriveTrainDriveMode.SHIFT_LEFT ||
+                drive_mode == DriveTrainDriveMode.SHIFT_RIGHT) {
             setCurrentHeadingAsTargetHeading();
         }
 

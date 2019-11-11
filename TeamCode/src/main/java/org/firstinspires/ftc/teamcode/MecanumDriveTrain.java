@@ -7,17 +7,7 @@ import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 // Motors for wheels
-public class WheelMotors {
-    public enum DriveMode {
-        FORWARD,
-        BACKWARD,
-        TURN_LEFT,
-        TURN_RIGHT,
-        SHIFT_LEFT,
-        SHIFT_RIGHT,
-        STOP
-    }
-
+public class MecanumDriveTrain {
     static boolean AUTO_CORRECT_HEADING = true;
     static final double DEFAULT_DRIVE_POWER = 0.40;            // default driving power
     static final double DEFAULT_TURN_POWER = 0.15;             // default turning power
@@ -46,11 +36,11 @@ public class WheelMotors {
     int prevReadEncCntMotorRF_ = 0;
     double prevEncCntChangeStartTime_ = 0;
 
-    public WheelMotors(DcMotor motorRF,
-                       DcMotor motorRB,
-                       DcMotor motorLF,
-                       DcMotor motorLB,
-                       Telemetry telemetry) {
+    public MecanumDriveTrain(DcMotor motorRF,
+                             DcMotor motorRB,
+                             DcMotor motorLF,
+                             DcMotor motorLB,
+                             Telemetry telemetry) {
         telemetry_ = telemetry;
 
         motorRF_ = motorRF;
@@ -86,7 +76,7 @@ public class WheelMotors {
         return motorLB_;
     }
 
-    public void driveByMode(DriveMode drive_mode,
+    public void driveByMode(DriveTrainDriveMode drive_mode,
                             RevImu imu,              // If imu != null, allow automaically correct heading error
                             double target_heading,
                             boolean show_set_power_info) {
@@ -109,7 +99,7 @@ public class WheelMotors {
                     break;
             }
 
-            if (drive_mode == DriveMode.BACKWARD) heading_error *= -1.0;
+            if (drive_mode == DriveTrainDriveMode.BACKWARD) heading_error *= -1.0;
 
             heading_correction = heading_error * MAX_HEADING_CORRECTION_GAIN;
             if (MAX_HEADING_CORRECTION > 0.0) {             // clip the correction to ensure that motor is not reversed to avoid big swing
@@ -166,7 +156,7 @@ public class WheelMotors {
         }
     }
 
-    private double motorLFPower(DriveMode drive_mode) {
+    private double motorLFPower(DriveTrainDriveMode drive_mode) {
         switch (drive_mode) {
             case FORWARD:
                 return DEFAULT_DRIVE_POWER;
@@ -187,7 +177,7 @@ public class WheelMotors {
         return 0;
     }
 
-    private double motorRFPower(DriveMode drive_mode) {
+    private double motorRFPower(DriveTrainDriveMode drive_mode) {
         switch (drive_mode) {
             case FORWARD:
                 return (-1.0 * DEFAULT_DRIVE_POWER);

@@ -34,30 +34,32 @@ public class RobotHardware extends LinearOpMode {
     }
 
     public void initializeAutonomous() {
-        // createDriveTrain();
+        // createMecanumDriveTrain();
 
         createDetectSkystone();
     }
 
     public void initializeTeleOp() {
-        // createDriveTrain();
+        // createMecanumDriveTrain();
     }
 
-    DriveTrain getDriveTrain() {
+    DriveTrain driveTrain() {
         return driveTrain_;
     }
 
-    DetectSkystone getDetectSkystone() {
+    DetectSkystone detectSkystone() {
         return detectSkystone_;
     }
 
-    private void createDriveTrain() {
-        driveTrain_ = new DriveTrain(hardwareMap.dcMotor.get("motorRF"),
-                                     hardwareMap.dcMotor.get("motorRB"),
-                                     hardwareMap.dcMotor.get("motorLF"),
-                                     hardwareMap.dcMotor.get("motorLB"),
-                                     hardwareMap.get(BNO055IMU.class, "imu"),
+    DetectNavigationTarget detectNavigationTarget() { return detectNavigationTarget_; }
+
+    private void createMecanumDriveTrain() {
+        driveTrain_ = new DriveTrain(hardwareMap.get(BNO055IMU.class, "imu"),
                                      telemetry);
+        driveTrain_.createMecanumDriveTrain(hardwareMap.dcMotor.get("motorRF"),
+                                            hardwareMap.dcMotor.get("motorRB"),
+                                            hardwareMap.dcMotor.get("motorLF"),
+                                            hardwareMap.dcMotor.get("motorLB"));
     }
 
     void createDetectSkystone(){
