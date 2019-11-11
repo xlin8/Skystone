@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 @Autonomous(name="AutonomousCommon", group="FS")
-// @Disabled
+@Disabled
 public class AutonomousCommon extends RobotHardware {
     // Opcodes used by autonomous
     static final int OP_STOP = 0;
