@@ -61,6 +61,7 @@ public class AutonomousCommon extends RobotHardware {
         currOpStartTime_ = 0;
 
         driveTrain().resetTargetHeading();
+        driveTrain().resetEncoders(0);
     }
 
     void cleanUpAtEndOfRun() {

@@ -31,6 +31,8 @@ public class DriveTrain {
                                               motorLF,
                                               motorLB,
                                               telemetry_);
+        mecanumDrive_.useEncoders();
+        mecanumDrive_.resetEncoders(0);
     }
 
     MecanumDriveTrain mecanumDriveTrain() {
@@ -112,15 +114,13 @@ public class DriveTrain {
         }
 
         if (finish_flag == false) {
-            mecanumDrive_.useEncoders();
-
             if (mecanumDrive_.reachToTargetEncoderCount(target_encoder_cnt) == true) {
                 finish_flag = true;
             } else {
                 mecanumDrive_.driveByMode(drive_mode,
-                        revImu_,
-                        targetHeading_,
-                        false);
+                                          revImu_,
+                                          targetHeading_,
+                                         false);
 
                 if (mecanumDrive_.isEncoderStuck(time) == true) {
                     finish_flag = true;

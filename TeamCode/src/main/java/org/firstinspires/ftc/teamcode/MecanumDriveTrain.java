@@ -49,15 +49,19 @@ public class MecanumDriveTrain {
         motorLB_ = motorLB;
 
         // Reverse motor if necessary
-        // motorRF_.setDirection(DcMotor.Direction.REVERSE);
-        // motorRB_.setDirection(DcMotor.Direction.REVERSE);
-        // motorLF_.setDirection(DcMotor.Direction.REVERSE);
-        // motorLB_.setDirection(DcMotor.Direction.REVERSE);
+        // reverseMotorDirection();
 
         motorRF_.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorRB_.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorLF_.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorLB_.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+    }
+
+    void reverseMotorDirection() {
+        motorRF_.setDirection(DcMotor.Direction.REVERSE);
+        motorRB_.setDirection(DcMotor.Direction.REVERSE);
+        motorLF_.setDirection(DcMotor.Direction.REVERSE);
+        motorLB_.setDirection(DcMotor.Direction.REVERSE);
     }
 
     public DcMotor getMotorRF() {
@@ -79,9 +83,9 @@ public class MecanumDriveTrain {
     public void driveByMode(DriveTrainDriveMode drive_mode,
                             RevImu imu,              // If imu != null, allow automaically correct heading error
                             double target_heading,
-                            boolean show_set_power_info) {
-        double power_lf = motorLFPower(drive_mode);
-        double power_rf = motorRFPower(drive_mode);
+                            boolean show_motor_info) {
+        double power_lf = getMotorLFPower(drive_mode);
+        double power_rf = getMotorRFPower(drive_mode);
 
         double heading_error = 0.0;
         double heading_correction = 0.0;
@@ -94,49 +98,41 @@ public class MecanumDriveTrain {
                     if (Math.abs(heading_error) > MAX_HEADING_CORRECTION_ERROR) {  // prevent incorrect heading error causing robot to spin
                         heading_error = 0.0;
                     }
+
+                    if (drive_mode == DriveTrainDriveMode.BACKWARD) heading_error *= -1.0;
+
+                    heading_correction = heading_error * MAX_HEADING_CORRECTION_GAIN;
+                    if (MAX_HEADING_CORRECTION > 0.0) {             // clip the correction to ensure that motor is not reversed to avoid big swing
+                        heading_correction = Range.clip(heading_correction, -MAX_HEADING_CORRECTION, MAX_HEADING_CORRECTION);
+                    }
+
+                    power_lf *= (1.0 + heading_correction);  // h_err>0, bias to left, turn right by increasing power for left wheels
+                    power_rf *= (1.0 - heading_correction);
                     break;
                 default:
                     break;
             }
-
-            if (drive_mode == DriveTrainDriveMode.BACKWARD) heading_error *= -1.0;
-
-            heading_correction = heading_error * MAX_HEADING_CORRECTION_GAIN;
-            if (MAX_HEADING_CORRECTION > 0.0) {             // clip the correction to ensure that motor is not reversed to avoid big swing
-                heading_correction = Range.clip(heading_correction, -MAX_HEADING_CORRECTION, MAX_HEADING_CORRECTION);
-            }
-
-            power_lf *= (1.0 + heading_correction);  // h_err>0, bias to left, turn right by increasing power for left wheels
-            power_rf *= (1.0 - heading_correction);
         }
 
         double power_lb = power_lf;
         double power_rb = power_rf;
         switch (drive_mode) {
             case SHIFT_LEFT:
-                power_rb = power_lb;
-                power_lf = -power_lb;
-                power_rf = -power_lb;
-                break;
             case SHIFT_RIGHT:
-                // front wheels have same power, back wheels have reverse power
-                power_rf = power_lf;
-                power_rb = -power_lf;
                 power_lb = -power_lf;
+                power_rb = -power_lf;
                 break;
             default:
                 break;
         }
 
-        setPower(power_rf,
-                 power_rb,
-                 power_lf,
-                 power_lb);
+        setPower(power_rf, power_rb, power_lf, power_lb);
 
-        if (show_set_power_info == true) {
+        if (show_motor_info == true) {
             telemetry_.addData("Set Power",
-                                "PowerFactor"+String.valueOf(powerFactor_)+
-                                      "RF="+String.valueOf(power_rf)+
+                                "DriveMode="+String.valueOf(drive_mode) +
+                                      ", PowerFactor="+String.valueOf(powerFactor_)+
+                                      ", RF="+String.valueOf(power_rf)+
                                       ", RB="+String.valueOf(power_rb)+
                                       ", LF="+String.valueOf(power_lf)+
                                       ", LB="+String.valueOf(power_lb));
@@ -148,28 +144,28 @@ public class MecanumDriveTrain {
             if (imu != null) {
                 telemetry_.addData("Heading",
                                     "TargetHeading="+String.valueOf(target_heading)+
-                                          "Error="+String.valueOf(heading_error)+
-                                          "Correction="+String.valueOf(heading_correction));
+                                          ", Error="+String.valueOf(heading_error)+
+                                          ", Correction="+String.valueOf(heading_correction));
             }
 
             telemetry_.update();
         }
     }
 
-    private double motorLFPower(DriveTrainDriveMode drive_mode) {
+    private double getMotorLFPower(DriveTrainDriveMode drive_mode) {
         switch (drive_mode) {
             case FORWARD:
                 return DEFAULT_DRIVE_POWER;
             case BACKWARD:
-                return (-1.0 * DEFAULT_DRIVE_POWER);
+                return -DEFAULT_DRIVE_POWER;
             case TURN_LEFT:
-                return (-1.0 * DEFAULT_TURN_POWER);
+                return -DEFAULT_TURN_POWER;
             case TURN_RIGHT:
                 return DEFAULT_TURN_POWER;
             case SHIFT_LEFT:
-                return (-1.0 * DEFAULT_SHIFT_POWER);
-            case SHIFT_RIGHT:
                 return DEFAULT_SHIFT_POWER;
+            case SHIFT_RIGHT:
+                return -DEFAULT_SHIFT_POWER;
             default:
                 break;
         }
@@ -177,20 +173,20 @@ public class MecanumDriveTrain {
         return 0;
     }
 
-    private double motorRFPower(DriveTrainDriveMode drive_mode) {
+    private double getMotorRFPower(DriveTrainDriveMode drive_mode) {
         switch (drive_mode) {
             case FORWARD:
-                return (-1.0 * DEFAULT_DRIVE_POWER);
+                return -DEFAULT_DRIVE_POWER;
             case BACKWARD:
                 return DEFAULT_DRIVE_POWER;
             case TURN_LEFT:
-                return (-1.0 * DEFAULT_TURN_POWER);
+                return -DEFAULT_TURN_POWER;
             case TURN_RIGHT:
                 return DEFAULT_TURN_POWER;
             case SHIFT_LEFT:
-                return 0;
+                return DEFAULT_SHIFT_POWER;
             case SHIFT_RIGHT:
-                return 0;
+                return -DEFAULT_SHIFT_POWER;
             default:
                 break;
         }
