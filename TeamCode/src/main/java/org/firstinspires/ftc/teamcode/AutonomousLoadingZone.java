@@ -6,9 +6,9 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 // @Disabled
 public class AutonomousLoadingZone extends AutonomousCommon {
     AutoOperation [] opLoadZone_ = {
-        new AutoOperation(OP_DRIVE_TRAIN_FORWARD, 0.5),
-        new AutoOperation(OP_DRIVE_TRAIN_TURN_LEFT, 45),
-        new AutoOperation(OP_STOP, 0)
+        new AutoOperation(AutoOperation.OpCode.OP_DRIVE_TRAIN_FORWARD, 0.5),
+        new AutoOperation(AutoOperation.OpCode.OP_DRIVE_TRAIN_TURN_LEFT, 45),
+        new AutoOperation(AutoOperation.OpCode.OP_STOP, 0)
     };
 
     AutonomousLoadingZone() {

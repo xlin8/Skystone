@@ -6,18 +6,6 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 @Autonomous(name="AutonomousCommon", group="FS")
 @Disabled
 public class AutonomousCommon extends RobotHardware {
-    // Opcodes used by autonomous
-    static final int OP_STOP = 0;
-    static final int OP_DRIVE_TRAIN_RESET_ENCODER = 1;
-    static final int OP_DRIVE_TRAIN_RESET_HEADING = 2;
-    static final int OP_DRIVE_TRAIN_SHIFT_GEAR = 3;
-    static final int OP_DRIVE_TRAIN_FORWARD = 4;
-    static final int OP_DRIVE_TRAIN_BACKWARD = 5;
-    static final int OP_DRIVE_TRAIN_TURN_LEFT = 6;
-    static final int OP_DRIVE_TRAIN_TURN_RIGHT = 7;
-    static final int OP_DRIVE_TRAIN_SHIFT_LEFT = 8;
-    static final int OP_DRIVE_TRAIN_SHIFT_RIGHT = 9;
-
     AutoOperation [] opList_ = null;        // List all operations to be done during autonomous
     int numOpsInList_ = 0;                  // Array size of opList_
     int currOpIdInList_ = -1;               // Index of current opcode in opList_
@@ -68,15 +56,15 @@ public class AutonomousCommon extends RobotHardware {
         detectSkystone().shutdownTfod();
     }
 
-    int getCurrentOpcode() {
-        if (numOpsInList_ == 0) return OP_STOP;
+    AutoOperation.OpCode getCurrentOpcode() {
+        if (numOpsInList_ == 0) return AutoOperation.OpCode.OP_STOP;
 
         if (currOpIdInList_ < 0) {
             currOpIdInList_ = -1;
-            if (moveToNextOpcode() == false) return OP_STOP;
+            if (moveToNextOpcode() == false) return AutoOperation.OpCode.OP_STOP;
         }
 
-        return (int) opList_[currOpIdInList_].opcode();
+        return opList_[currOpIdInList_].opcode();
     }
 
     double getCurrentOperand() {
@@ -89,7 +77,7 @@ public class AutonomousCommon extends RobotHardware {
     }
 
     void runCurrentOpcode() {
-        final int opcode = getCurrentOpcode();
+        final AutoOperation.OpCode opcode = getCurrentOpcode();
         final double operand = getCurrentOperand();
         boolean finish_flag = false;
         switch (opcode) {
