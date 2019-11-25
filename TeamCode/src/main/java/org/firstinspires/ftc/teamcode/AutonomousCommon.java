@@ -94,7 +94,7 @@ public class AutonomousCommon extends RobotHardware {
         boolean finish_flag = false;
         switch (opcode) {
             case OP_DRIVE_TRAIN_RESET_ENCODER:
-                finish_flag = runDriveTrainResetEncoder();
+                finish_flag = runDriveTrainResetEncoder(operand);
                 break;
             case OP_DRIVE_TRAIN_RESET_HEADING:
                 finish_flag = runDriveTrainResetHeading();
@@ -167,14 +167,17 @@ public class AutonomousCommon extends RobotHardware {
     }
 
     boolean runDriveTrainResetEncoder() {
+        return runDriveTrainResetEncoder(0.05);
+    }
+
+    boolean runDriveTrainResetEncoder(double time_limit) {
         DriveTrain drive_train = driveTrain();
-        final double max_reset_time = 0.5;
         do {
             double time = timer_.time();
             drive_train.resetEncoders(time);
 
             if (drive_train.allEncodersAreReset()==true) return true;
-        } while ((time - currOpStartTime_) < max_reset_time);
+        } while ((time - currOpStartTime_) < time_limit);
 
         telemetry.addData("Fail", "Drive train motors are not reset.");
         telemetry.update();
