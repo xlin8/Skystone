@@ -129,27 +129,50 @@ public class MecanumDriveTrain {
         setPower(power_rf, power_rb, power_lf, power_lb);
 
         if (show_motor_info == true) {
-            telemetry_.addData("Set Power",
-                                "DriveMode="+String.valueOf(drive_mode) +
-                                      ", PowerFactor="+String.valueOf(powerFactor_)+
-                                      ", RF="+String.valueOf(power_rf)+
-                                      ", RB="+String.valueOf(power_rb)+
-                                      ", LF="+String.valueOf(power_lf)+
-                                      ", LB="+String.valueOf(power_lb));
-            telemetry_.addData("Current EncPos",
-                                "RF="+String.valueOf(motorRF_.getCurrentPosition()) +
-                                      ", RB="+String.valueOf(motorRB_.getCurrentPosition()) +
-                                      ", LF="+String.valueOf(motorLF_.getCurrentPosition()) +
-                                      ", LB="+String.valueOf(motorLB_.getCurrentPosition()));
-            if (imu != null) {
-                telemetry_.addData("Heading",
-                                    "TargetHeading="+String.valueOf(target_heading)+
-                                          ", Error="+String.valueOf(heading_error)+
-                                          ", Correction="+String.valueOf(heading_correction));
-            }
+            telemetry_.addData("DriveMode",  String.valueOf(drive_mode));
+            showSetPowers(power_rf, power_rb, power_lf, power_lb, false);
+            showEncoderPositions(false);
+            if (imu != null) showHeading(target_heading, heading_error, heading_correction, false);
 
             telemetry_.update();
         }
+    }
+
+    void showSetPowers(double power_rf,
+                       double power_rb,
+                       double power_lf,
+                       double power_lb,
+                       boolean update_flag) {
+        telemetry_.addData("Set Powers",
+                        "PowerFactor="+String.valueOf(powerFactor_)+
+                        ", RF="+String.valueOf(power_rf)+
+                        ", RB="+String.valueOf(power_rb)+
+                        ", LF="+String.valueOf(power_lf)+
+                        ", LB="+String.valueOf(power_lb));
+
+        if (update_flag == true) telemetry_.update();
+    }
+
+    void showEncoderPositions(boolean update_flag) {
+        telemetry_.addData("Encoder Positions",
+                "RF="+String.valueOf(motorRF_.getCurrentPosition()) +
+                        ", RB="+String.valueOf(motorRB_.getCurrentPosition()) +
+                        ", LF="+String.valueOf(motorLF_.getCurrentPosition()) +
+                        ", LB="+String.valueOf(motorLB_.getCurrentPosition()));
+
+        if (update_flag == true) telemetry_.update();
+    }
+
+    void showHeading(double target_heading,
+                     double heading_error,
+                     double heading_correction,
+                     boolean update_flag) {
+        telemetry_.addData("Heading",
+                "TargetHeading="+String.valueOf(target_heading)+
+                        ", Error="+String.valueOf(heading_error)+
+                        ", Correction="+String.valueOf(heading_correction));
+
+        if (update_flag == true) telemetry_.update();
     }
 
     private double getMotorLFPower(DriveTrainDriveMode drive_mode) {
