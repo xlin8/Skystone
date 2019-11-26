@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 public class AutoOperation {
     public enum OpCode {
         OP_STOP,
+        OP_WAIT,
         OP_DRIVE_TRAIN_RESET_ENCODER,
         OP_DRIVE_TRAIN_RESET_HEADING,
         OP_DRIVE_TRAIN_SHIFT_GEAR,

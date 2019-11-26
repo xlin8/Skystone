@@ -81,6 +81,9 @@ public class AutonomousCommon extends RobotHardware {
         final double operand = getCurrentOperand();
         boolean finish_flag = false;
         switch (opcode) {
+            case OP_WAIT:
+                finish_flag = runDriveTrainWait(operand);
+                break;
             case OP_DRIVE_TRAIN_RESET_ENCODER:
                 finish_flag = runDriveTrainResetEncoder(operand);
                 break;
@@ -150,6 +153,16 @@ public class AutonomousCommon extends RobotHardware {
             default:
                 break;
         }
+
+        return true;
+    }
+
+    boolean runDriveTrainWait(double time_limit) {
+        DriveTrain drive_train = driveTrain();
+        do {
+            double time = timer_.time();
+            drive_train.driveByMode(DriveTrainDriveMode.STOP, 0, time);
+        } while ((time - currOpStartTime_) < time_limit);
 
         return true;
     }
