@@ -1,11 +1,18 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.text.method.Touch;
+import android.view.View;
+
 import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 
 public class RobotHardware extends LinearOpMode {
@@ -13,86 +20,140 @@ public class RobotHardware extends LinearOpMode {
     ElapsedTime timer_ = new ElapsedTime();
     double currTime_ = 0;
 
-    /// drive train
+    /// IMU used for detecting heading during autonomous
+    RevImu imu_ = null;
+
+    /// Drive train
     DriveTrain driveTrain_ = null;
 
     /// Tfod for detecting skystone
     DetectSkystone detectSkystone_ = null;
 
-    /// VuMark for detecting navigation target
+    /// Hooks including left and right hooks
+    Hooks hooks_ = null;
+
+    /// Lift
+    Lift lift_ = null;
+
+    /// Grabber
+    Grabber grabber_ = null;
+
+    /// Detecting Vuforia targets
     DetectNavigationTarget detectNavigationTarget_ = null;
-
-    /// Detect red/blue line color sensor
-    DetectColor detectRedBlueLine_ = null;
-
-    /// Detect front distance
-    DetectDistance detFrontDistance_ = null;
 
     @Override
     public void runOpMode() {
         // Do nothing
     }
 
+    // Code to run when op mode is initialized
     public void initializeAutonomous() {
-        // createMecanumDriveTrain();
+        createMecanumDriveTrain(true);
 
-        createDetectSkystone();
+        // createDetectNavigationTarget();  // Create object to use Vuforia to detect navigation targets including skystone
+        createDetectSkystone();          // Create object to use tensor flow to detect skystone
+
+        createHooks(Hooks.Position.INIT);
+        createLift();
+        createGrabber();
     }
 
     public void initializeTeleOp() {
-        // createMecanumDriveTrain();
+        createMecanumDriveTrain(false);
+
+        createHooks(Hooks.Position.INIT);
+        createLift();
+        createGrabber();
     }
 
-    DriveTrain driveTrain() {
-        return driveTrain_;
+    RevImu getImu() {
+        return imu_;
     }
 
-    DetectSkystone detectSkystone() {
+    DetectSkystone getDetectSkystone() {
         return detectSkystone_;
     }
 
-    DetectNavigationTarget detectNavigationTarget() { return detectNavigationTarget_; }
-
-    private void createMecanumDriveTrain() {
-        driveTrain_ = new DriveTrain(hardwareMap.get(BNO055IMU.class, "imu"),
-                                     telemetry);
-        driveTrain_.createMecanumDriveTrain(hardwareMap.dcMotor.get("motorRF"),
-                                            hardwareMap.dcMotor.get("motorRB"),
-                                            hardwareMap.dcMotor.get("motorLF"),
-                                            hardwareMap.dcMotor.get("motorLB"));
+    DriveTrain getDriveTrain() {
+        return driveTrain_;
     }
 
-    void createDetectSkystone(){
+    Lift getLift() {
+        return lift_;
+    }
+
+    Hooks getHooks() {
+        return hooks_;
+    }
+
+    void createImu() {
+        imu_ = new RevImu(hardwareMap.get(BNO055IMU.class, "imu"),
+                telemetry);
+    }
+
+    void createMecanumDriveTrain(boolean create_imu) {
+        if (create_imu == true && imu_ == null) createImu();
+
+        driveTrain_ = new DriveTrain(imu_, telemetry);
+
+        driveTrain_.createMecanumDriveTrain(hardwareMap);
+    }
+
+    void createDetectSkystone() {
         int tfod_monitor_view_id = hardwareMap.appContext.getResources().getIdentifier(
                 "tfodMonitorViewId", "id", hardwareMap.appContext.getPackageName());
-        // WebcamName webcam_name = hardwareMap.get(WebcamName.class, "webcam");
-        WebcamName webcam_name = null;
+        WebcamName webcam_name = hardwareMap.get(WebcamName.class, "webcam");
+        // WebcamName webcam_name = null;
+
         detectSkystone_ = new DetectSkystone(webcam_name,
-                                             tfod_monitor_view_id,
-                                             telemetry);
+                tfod_monitor_view_id,
+                telemetry);
+    }
+
+    void createLift() {
+        DcMotor motor_left = hardwareMap.dcMotor.get("motorLiftLeft");
+        DcMotor motor_right = hardwareMap.dcMotor.get("motorLiftRight");
+
+        lift_ = new Lift(motor_left,
+                motor_right,
+                telemetry);
+    }
+
+    void createGrabber() {
+        DcMotor crane_motor = hardwareMap.get(DcMotor.class, "craneMotor");
+        ;
+        Servo rotation_servo = hardwareMap.get(Servo.class, "rotationServo");
+        Servo clamp_servo = hardwareMap.get(Servo.class, "clampServo");
+
+        grabber_ = new Grabber(crane_motor,
+                "rotationServo",
+                rotation_servo,
+                "clampServo",
+                clamp_servo,
+                telemetry);
+    }
+
+    void createHooks(Hooks.Position init_position) {
+        Servo left_servo = hardwareMap.get(Servo.class, "leftHookServo");
+        Servo right_servo = hardwareMap.get(Servo.class, "rightHookServo");
+
+        hooks_ = new Hooks(left_servo,
+                "leftHookServo",
+                right_servo,
+                "rightHookServo",
+                init_position,
+                telemetry);
     }
 
     void createDetectNavigationTarget() {
         int camera_monitor_view_id = hardwareMap.appContext.getResources().getIdentifier(
                 "cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
-        // WebcamName webcam_name = hardwareMap.get(WebcamName.class, "webcam");
-        WebcamName webcam_name = null;
+        WebcamName webcam_name = hardwareMap.get(WebcamName.class, "webcam");
+        //WebcamName webcam_name = null;
+
         detectNavigationTarget_ = new DetectNavigationTarget(webcam_name,
                                                              camera_monitor_view_id,
                                                              telemetry);
     }
 
-    void createDetectRedBlueLineSensor() {
-        ColorSensor sensor = hardwareMap.get(ColorSensor.class, "detLineSensor");
-
-        detectRedBlueLine_ = new DetectColor(sensor,
-                                             telemetry);
-    }
-
-    void createDetectFrontDistanceSensor() {
-        ModernRoboticsI2cRangeSensor sensor = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "detFrontDistSensor");
-
-        detFrontDistance_ = new DetectDistance(sensor,
-                                               telemetry);
-    }
 }

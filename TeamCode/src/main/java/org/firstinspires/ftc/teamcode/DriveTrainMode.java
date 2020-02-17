@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
-public enum DriveTrainDriveMode {
+public enum DriveTrainMode {
     FORWARD,
     BACKWARD,
     TURN_LEFT,

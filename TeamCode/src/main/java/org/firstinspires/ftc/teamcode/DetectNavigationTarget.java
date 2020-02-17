@@ -29,7 +29,7 @@ import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocaliz
 public class DetectNavigationTarget {
     // Trackable targets
     static final int SKY_STONE = 0;
-    static final int BLUE_REAR_BRIDGE =1;
+    static final int BLUE_REAR_BRIDGE = 1;
     static final int RED_REAR_BRIDGE = 2;
     static final int RED_FRONT_BRIDGE = 3;
     static final int BLUE_FRONT_BRIDGE = 4;
@@ -98,12 +98,12 @@ public class DetectNavigationTarget {
 
     private int lastTrackableId_ = NUM_TRACKABLES;
     private OpenGLMatrix lastLocation_;
-    private double tX_ = 0;
-    private double tY_ = 0;
-    private double tZ_ = 0;
-    private double rX_ = 0;
-    private double rY_ = 0;
-    private double rZ_ = 0;
+    private double tX_ = 0; // x-coordinate
+    private double tY_ = 0; // y-coordinate
+    private double tZ_ = 0; // z-coordinate
+    private double rX_ = 0; // Rotation about the x-axis
+    private double rY_ = 0; // Rotation about the y-axis
+    private double rZ_ = 0; // Rotation about the z-axis
 
     public DetectNavigationTarget(WebcamName webcam_name,
                                   int camera_monitor_view_id,
@@ -251,7 +251,7 @@ public class DetectNavigationTarget {
     // pointing to the LEFT side of the Robot.
     // The two examples below assume that the camera is facing forward out the front of the robot.
     private void initPhoneLocation() {
-        final float CAMERA_FORWARD_DISPLACEMENT  = 4.0f * mmPerInch;   // eg: Camera is 4 Inches in front of robot center
+        final float CAMERA_FORWARD_DISPLACEMENT  = 4.0f * mmPerInch;   // eg: Camera is 4 Inches in front of robot center //TODO: When the webcam (or phone) is mounted, find the correct measurements
         final float CAMERA_VERTICAL_DISPLACEMENT = 8.0f * mmPerInch;   // eg: Camera is 8 Inches above ground
         final float CAMERA_LEFT_DISPLACEMENT     = 0;     // eg: Camera is ON the robot's center line
 
@@ -259,7 +259,7 @@ public class DetectNavigationTarget {
         float phoneY_rotate = 0;
         float phoneZ_rotate = 0;
 
-        // We need to rotate the camera around it's long axis to bring the correct camera forward.
+        // We need to rotate the camera around its long axis to bring the correct camera forward.
         if (CAMERA_CHOICE == BACK) phoneY_rotate = -90;
         else phoneY_rotate = 90;
 
@@ -309,9 +309,7 @@ public class DetectNavigationTarget {
     // find out if VuMark is visible to the phone camera.
     // @return True if VuMark found, false if not.
     boolean findTarget(int trackable_id) {
-        if (trackable_id >= 0 &&
-            trackable_id < NUM_TRACKABLES) {
-            // Loop through all trackable targets to see if the required one is visible
+        if (trackable_id >=0 && trackable_id < NUM_TRACKABLES) {
             for (VuforiaTrackable target : allTrackablesInList_) {
                 if (((VuforiaTrackableDefaultListener)target.getListener()).isVisible()) {
                     if (trackableNames_[trackable_id].equals(target.getName())==true) {
@@ -324,8 +322,9 @@ public class DetectNavigationTarget {
                             lastLocation_ = robot_location_transform;
                         }
 
-                        translateToLastLocationsToDistanceAndAngles();
                         showRobotLocation();
+                        translateToLastLocationsToDistanceAndAngles();
+
                         return true;
                     }
                 }
@@ -374,7 +373,9 @@ public class DetectNavigationTarget {
 
     private int convertTrackableNameToId(String name) {
         for (int i=0; i<NUM_TRACKABLES; ++i) {
-            if (trackables_.get(i).getName().equals(name)==true) return i;
+            if (trackables_.get(i).getName().equals(name)==true) {
+                return i;
+            }
         }
 
         return NUM_TRACKABLES;

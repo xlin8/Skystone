@@ -3,8 +3,8 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-@TeleOp(name="TestNavigationTarget", group="FS")
-// @Disabled
+@TeleOp(name="TestDetectNavigationTarget", group="FS")
+@Disabled
 public class TestDetectNavigationTarget extends RobotHardware {
 
     @Override
@@ -12,16 +12,18 @@ public class TestDetectNavigationTarget extends RobotHardware {
         initialize();
 
         /** Wait for the game to begin */
-        telemetry.addData(">", "Press Play to start test for detecting navigation target");
+        telemetry.addData(">", "Press Play to start test detect navigation targets program");
         telemetry.update();
 
         waitForStart();
 
         initializeWhenStart();
 
-        while (opModeIsActive()) {
-           detectNavigationTarget_.determineRobotLocation();
-           // detectNavigationTarget_.findTarget(DetectNavigationTarget.SKY_STONE);
+        if (opModeIsActive()) {
+            while (opModeIsActive()) {
+                // detectNavigationTarget_.determineRobotLocation();
+                detectNavigationTarget_.findTarget(DetectNavigationTarget.SKY_STONE);
+            }
         }
 
         cleanUpAtEndOfRun();
