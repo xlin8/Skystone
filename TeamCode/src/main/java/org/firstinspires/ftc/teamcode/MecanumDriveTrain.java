@@ -220,6 +220,43 @@ public class MecanumDriveTrain {
         return ret_power_val * MAX_JOYSTICK_DRIVE_POWER;
     }
 
+    // FrontLeft = Ch3 + Ch1 + Ch4
+    // RearLeft = Ch3 + Ch1 - Ch4
+    // FrontRight = Ch3 - Ch1 - Ch4
+    // RearRight = Ch3 - Ch1 + Ch4
+    // Where:
+    //   Ch1 = Right joystick X-axis
+    //   Ch3 = Left joystick Y-axis
+    //   Ch4 = Left joystick X-axis
+    void omniDriveByGamePad(Gamepad gamepad) {
+        final double hypotenuse = Math.sqrt(gamepad.left_stick_y*gamepad.left_stick_y+gamepad.right_stick_x*gamepad.right_stick_x);
+        final double angle = Math.atan2(gamepad.left_stick_y , gamepad.right_stick_x);
+        final double turn = gamepad.left_stick_x;
+
+        double power_lf = 0.0;
+        double power_lb = 0.0;
+        double power_rf = 0.0;
+        double power_rb = 0.0;
+        if (Math.abs(gamepad.left_stick_y) < .1 && Math.abs(gamepad.right_stick_x) < .1) {
+            power_lf = -turn;
+            power_lb = -turn; //back
+            power_rf = -turn;
+            power_rb = -turn; //back
+        } else if (Math.abs(gamepad.right_stick_x) <= .1 && Math.abs(gamepad.left_stick_x) <= .1) {
+            power_lf = gamepad.left_stick_y;
+            power_lb = gamepad.left_stick_y;
+            power_rf = -gamepad.left_stick_y;
+            power_rb = -gamepad.left_stick_y;
+        } else {
+            power_lf = (hypotenuse * Math.cos(angle - (Math.PI / 4)) + Math.cos(angle) * turn);
+            power_lb = (hypotenuse * Math.sin(angle - (Math.PI / 4)) + Math.sin(angle) * turn); //back
+            power_rf = -(hypotenuse * Math.sin(angle - (Math.PI / 4)) - Math.sin(angle) * turn);
+            power_rb = -(hypotenuse * Math.cos(angle - (Math.PI / 4)) - Math.cos(angle) * turn); //back
+        }
+
+        setPower(power_lf, power_lb, power_rf, power_rb);
+    }
+
     void driveByMode(DriveTrainMode drive_mode,
                      boolean show_set_motor_info) {
         double power_lf = getMotorLFPowerByMode(drive_mode);
